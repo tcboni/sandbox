@@ -1455,9 +1455,9 @@ console.log('Sandbox ready ✓');`;
       const loaded = loadFromURL();
       if (!loaded) {
         // Load code from stored state only when there is no URL state
-        setEditorValue(htmlEd, appState.code.h || DEFAULT_HTML);
-        setEditorValue(cssEd, appState.code.c || DEFAULT_CSS);
-        setEditorValue(jsEd, appState.code.j || DEFAULT_JS);
+        setEditorValue(htmlEd, appState.code.h != null ? appState.code.h : DEFAULT_HTML);
+        setEditorValue(cssEd, appState.code.c != null ? appState.code.c : DEFAULT_CSS);
+        setEditorValue(jsEd, appState.code.j != null ? appState.code.j : DEFAULT_JS);
       }
 
       editorsPane.style.width = normalizeEditorWidth(
