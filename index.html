@@ -51,25 +51,18 @@
         --tab-h: 34px;
       }
 
-      @property --metal-rotate {
-        syntax: "<angle>";
-        initial-value: 0deg;
-        inherits: false;
-      }
-      @property --metal-rotate-2 {
+      @property --gradient_rotate {
         syntax: "<angle>";
         initial-value: 0deg;
         inherits: false;
       }
 
-      @keyframes metal-rotate {
-        to {
-          --metal-rotate: 360deg;
+      @keyframes button_gradient_rotate {
+        from {
+          --gradient_rotate: 0deg;
         }
-      }
-      @keyframes metal-rotate-2 {
         to {
-          --metal-rotate-2: 360deg;
+          --gradient_rotate: 360deg;
         }
       }
 
@@ -105,6 +98,7 @@
         padding: 9px 14px;
         gap: 10px;
         flex-shrink: 0;
+        position: relative;
       }
 
       .logo {
@@ -113,8 +107,12 @@
         gap: 10px;
         text-decoration: none;
         flex-shrink: 0;
+        position: relative;
+        z-index: 5;
+        filter: drop-shadow(0 0 17px rgb(220 220 220 / 0.2));
       }
       .logo-bezel {
+        --gradient_rotate: 0deg;
         position: relative;
         width: 30px;
         height: 30px;
@@ -123,43 +121,61 @@
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
-        box-sizing: border-box;
         background:
-          radial-gradient(circle at 30% 25%, var(--bg-3), var(--bg-1) 75%)
+          linear-gradient(0deg, rgb(010 010 010 / 1) 10%, rgb(040 040 050 / 1))
             padding-box,
           conic-gradient(
-              from var(--metal-rotate),
-              rgba(216, 216, 224, 0.6),
-              rgba(216, 216, 224, 0) 15%,
-              rgba(10, 10, 16, 0) 28%,
-              rgba(10, 10, 16, 1) 45%,
-              rgba(84, 84, 100, 0.5) 55%,
-              rgba(84, 84, 100, 0) 65%,
-              rgba(216, 216, 224, 0.85) 78%,
-              rgba(216, 216, 224, 0) 88%,
-              rgba(216, 216, 224, 0.6) 100%
-            )
-            border-box,
-          conic-gradient(
-              from var(--metal-rotate-2),
-              var(--metal-3),
-              var(--metal-1),
-              var(--metal-1),
-              var(--metal-6),
-              var(--metal-2),
-              var(--metal-5),
-              var(--metal-4),
-              var(--metal-3)
+              from var(--gradient_rotate),
+              rgb(from var(--metal-1) r g b / 0.5),
+              rgb(from var(--metal-1) r g b / 0),
+              rgb(from var(--metal-6) r g b / 0),
+              rgb(from var(--metal-6) r g b / 1),
+              rgb(from var(--metal-4) r g b / 0.5),
+              rgb(from var(--metal-4) r g b / 0),
+              rgb(from var(--metal-4) r g b / 1),
+              rgb(from var(--metal-1) r g b / 0.5)
             )
             border-box;
-        border: 2.5px solid transparent;
-        animation:
-          metal-rotate 8s linear infinite,
-          metal-rotate-2 14s linear infinite reverse;
+        animation: button_gradient_rotate 15s linear infinite;
+        border: 2px solid transparent;
         box-shadow:
           0 0 0 1px rgba(0, 0, 0, 0.5),
           0 1px 3px rgba(0, 0, 0, 0.6),
           inset 0 0 6px rgba(216, 216, 224, 0.1);
+      }
+      .logo-bezel::before {
+        content: "";
+        position: absolute;
+        inset: -2px;
+        z-index: -1;
+        border-radius: inherit;
+        background:
+          conic-gradient(
+              from var(--gradient_rotate),
+              rgb(from var(--metal-3) r g b / 1),
+              rgb(from var(--metal-1) r g b / 1),
+              rgb(from var(--metal-1) r g b / 1),
+              rgb(from var(--metal-6) r g b / 1),
+              rgb(from var(--metal-2) r g b / 1),
+              rgb(from var(--metal-5) r g b / 1),
+              rgb(from var(--metal-4) r g b / 1),
+              rgb(from var(--metal-3) r g b / 1)
+            )
+            padding-box,
+          conic-gradient(
+              from 0deg,
+              rgb(from var(--metal-3) r g b / 1),
+              rgb(from var(--metal-1) r g b / 1),
+              rgb(from var(--metal-1) r g b / 1),
+              rgb(from var(--metal-6) r g b / 1),
+              rgb(from var(--metal-2) r g b / 1),
+              rgb(from var(--metal-5) r g b / 1),
+              rgb(from var(--metal-4) r g b / 1),
+              rgb(from var(--metal-3) r g b / 1)
+            )
+            border-box;
+        animation: button_gradient_rotate 10s linear infinite reverse;
+        border: 2px solid transparent;
       }
       .logo-bezel svg {
         display: block;
@@ -186,7 +202,7 @@
         background-clip: text;
         letter-spacing: -0.3px;
         white-space: nowrap;
-        animation: logo-shimmer 6s ease-in-out infinite;
+        animation: logo-shimmer 10s ease-in-out infinite;
       }
 
       .header-right {
@@ -367,7 +383,6 @@
         font-size: 12.5px;
         line-height: 1.65;
         padding: 8px;
-        box-sizing: border-box;
         white-space: pre-wrap;
         overflow-wrap: break-word;
         tab-size: 2;
@@ -682,19 +697,11 @@
         background: transparent;
       }
       ::-webkit-scrollbar-thumb {
-        background: linear-gradient(
-          180deg,
-          var(--metal-3),
-          var(--metal-4)
-        );
+        background: linear-gradient(180deg, var(--metal-3), var(--metal-4));
         border-radius: 3px;
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(
-          180deg,
-          var(--metal-2),
-          var(--metal-3)
-        );
+        background: linear-gradient(180deg, var(--metal-2), var(--metal-3));
       }
 
       /* ─── No-select during drag ───────────────────────────────── */
@@ -1640,9 +1647,18 @@ console.log('Sandbox ready ✓');`;
       const loaded = loadFromURL();
       if (!loaded) {
         // Load code from stored state only when there is no URL state
-        setEditorValue(htmlEd, appState.code.h != null ? appState.code.h : DEFAULT_HTML);
-        setEditorValue(cssEd, appState.code.c != null ? appState.code.c : DEFAULT_CSS);
-        setEditorValue(jsEd, appState.code.j != null ? appState.code.j : DEFAULT_JS);
+        setEditorValue(
+          htmlEd,
+          appState.code.h != null ? appState.code.h : DEFAULT_HTML,
+        );
+        setEditorValue(
+          cssEd,
+          appState.code.c != null ? appState.code.c : DEFAULT_CSS,
+        );
+        setEditorValue(
+          jsEd,
+          appState.code.j != null ? appState.code.j : DEFAULT_JS,
+        );
       }
 
       editorsPane.style.width = normalizeEditorWidth(
