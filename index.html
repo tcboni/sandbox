@@ -1014,7 +1014,76 @@
         sel.addRange(range);
       }
 
+      const editorHistories = new WeakMap();
+      const HISTORY_COALESCE_MS = 400;
+      const HISTORY_LIMIT = 200;
+
+      function initEditorHistory(editor) {
+        editorHistories.set(editor, {
+          undo: [],
+          redo: [],
+          lastPush: 0,
+          suspended: false,
+        });
+      }
+
+      function snapshotEditor(editor) {
+        return { text: getEditorValue(editor), caret: getCaretOffset(editor) };
+      }
+
+      function recordHistory(editor) {
+        const h = editorHistories.get(editor);
+        if (!h || h.suspended) return;
+        const now = Date.now();
+        if (now - h.lastPush > HISTORY_COALESCE_MS || h.undo.length === 0) {
+          h.undo.push(snapshotEditor(editor));
+          if (h.undo.length > HISTORY_LIMIT) h.undo.shift();
+        }
+        h.lastPush = now;
+        h.redo = [];
+      }
+
+      function applySnapshot(editor, snap, language) {
+        setEditorValue(editor, snap.text);
+        renderHighlightedEditor(editor, language);
+        setCaretOffset(editor, snap.caret);
+      }
+
+      function undoEditor(editor, language) {
+        const h = editorHistories.get(editor);
+        if (!h || h.undo.length === 0) return;
+        const current = snapshotEditor(editor);
+        const prev = h.undo.pop();
+        h.redo.push(current);
+        h.lastPush = 0;
+        h.suspended = true;
+        applySnapshot(editor, prev, language);
+        h.suspended = false;
+        scheduleRun();
+        saveCode();
+      }
+
+      function redoEditor(editor, language) {
+        const h = editorHistories.get(editor);
+        if (!h || h.redo.length === 0) return;
+        const current = snapshotEditor(editor);
+        const next = h.redo.pop();
+        h.undo.push(current);
+        h.lastPush = 0;
+        h.suspended = true;
+        applySnapshot(editor, next, language);
+        h.suspended = false;
+        scheduleRun();
+        saveCode();
+      }
+
       function bindEditorBehavior(editor, language) {
+        initEditorHistory(editor);
+
+        editor.addEventListener("beforeinput", () => {
+          recordHistory(editor);
+        });
+
         editor.addEventListener("input", () => {
           renderHighlightedEditor(editor, language);
           scheduleRun();
@@ -1024,6 +1093,7 @@
         editor.addEventListener("paste", (e) => {
           e.preventDefault();
           const text = e.clipboardData?.getData("text/plain") || "";
+          recordHistory(editor);
           insertAtCaret(text);
           renderHighlightedEditor(editor, language);
           scheduleRun();
@@ -1031,8 +1101,21 @@
         });
 
         editor.addEventListener("keydown", (e) => {
+          const mod = e.metaKey || e.ctrlKey;
+          if (mod && e.key.toLowerCase() === "z") {
+            e.preventDefault();
+            if (e.shiftKey) redoEditor(editor, language);
+            else undoEditor(editor, language);
+            return;
+          }
+          if (mod && e.key.toLowerCase() === "y") {
+            e.preventDefault();
+            redoEditor(editor, language);
+            return;
+          }
           if (e.key !== "Tab") return;
           e.preventDefault();
+          recordHistory(editor);
           insertAtCaret("  ");
           renderHighlightedEditor(editor, language);
           scheduleRun();
