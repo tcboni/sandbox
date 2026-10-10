@@ -104,8 +104,8 @@
         height: 20px;
       }
       .logo-text {
-        font-family: ui-serif, "Iowan Old Style", Georgia, "Times New Roman",
-          serif;
+        font-family:
+          ui-serif, "Iowan Old Style", Georgia, "Times New Roman", serif;
         font-size: 16px;
         font-weight: 600;
         color: var(--text);
@@ -336,11 +336,18 @@
         min-height: 0;
         overflow: hidden;
       }
-      #preview-frame {
+      #frame-wrap iframe {
+        position: absolute;
+        inset: 0;
         width: 100%;
         height: 100%;
         border: none;
-        display: block;
+      }
+      /* Opacity, not visibility: Chrome does not paint a hidden frame, so it
+         would flash when it is shown. */
+      #frame-wrap iframe.pending {
+        opacity: 0;
+        pointer-events: none;
       }
       #drag-shield {
         display: none;
@@ -763,10 +770,7 @@
         </div>
 
         <div id="frame-wrap">
-          <iframe
-            id="preview-frame"
-            sandbox="allow-scripts allow-modals allow-forms"
-          ></iframe>
+          <iframe sandbox="allow-scripts allow-modals allow-forms"></iframe>
           <div id="paused" hidden>
             <strong>Auto-run paused</strong>
             <p>
@@ -807,7 +811,7 @@
       "use strict";
 
       /* ── Elements ──────────────────────────────────────────────────── */
-      const frame = document.getElementById("preview-frame");
+      const frameWrap = document.getElementById("frame-wrap");
       const previewPane = document.getElementById("preview-pane");
       const pausedEl = document.getElementById("paused");
       const consolePn = document.getElementById("console-pane");
@@ -1027,6 +1031,13 @@
       let lastRunAt = 0;
       let runId = 0;
       let autoRunPaused = false;
+      let runDone = true;
+      let lastAlive = Date.now();
+      // The newest preview frame, and the one on screen. They differ while
+      // the newest one loads.
+      let frame = frameWrap.querySelector("iframe");
+      let shownFrame = frame;
+      let hangTimer = null;
       let htmlLines = null;
       let saveTimer = null;
       let logCount = 0;
@@ -1062,10 +1073,21 @@
         }
       }
 
-      const MIN_EDITOR_PANEL_PX = 50;
-      const DEFAULT_CONSOLE_HEIGHT_PX = 190;
-      const MIN_CONSOLE_HEIGHT_PX = 60;
-      const SAVE_DELAY_MS = 500;
+      const MIN_EDITOR_PANEL_PX = 50; // smallest HTML, CSS or JS panel height
+      const MIN_PANE_WIDTH_PX = 160; // smallest editors or preview column width
+      const SPLITTER_PX = 4; // 8px handle minus 2px negative margin each side
+      const MIN_PREVIEW_HEIGHT_PX = 80; // preview space the console must leave
+      const DEFAULT_CONSOLE_HEIGHT_PX = 190; // console height before any resize
+      const MIN_CONSOLE_HEIGHT_PX = 60; // smallest console height
+      const SAVE_DELAY_MS = 500; // save the code this long after the last edit
+      const TOAST_MS = 2500; // how long a toast stays visible
+      const RUN_THROTTLE_MS = 50; // at most one auto-run in this period
+      const SHOW_FRAME_DELAY_MS = 20; // wait for a new preview to paint
+      const DONE_DELAY_MS = 300; // "done" this long after load, for late loops
+      const HEARTBEAT_MS = 250; // how often the preview sends "alive"
+      const HANG_CHECK_MS = 250; // how often the editor checks for a hang
+      const HANG_MS = 2000; // no heartbeat for this long = the preview is hung
+      const RECENT_HEARTBEAT_MS = 500; // at page hide, a newer beat means alive
       const RUN_FLAG_KEY = "sandbox-run-pending";
       const editorPanels = [htmlPanel, cssPanel, jsPanel];
 
@@ -1157,7 +1179,7 @@
         toastEl.className = "show " + type;
         toastTimer = setTimeout(function () {
           toastEl.className = "";
-        }, 2600);
+        }, TOAST_MS);
       }
 
       /* ── URL state ─────────────────────────────────────────────────── */
@@ -1224,14 +1246,18 @@
 
       /* ── Run preview ───────────────────────────────────────────────── */
       // Runs inside the preview iframe. run() injects its source text, so it
-      // must not use anything from the outer scope.
-      function previewShim(runId) {
+      // must not use anything from the outer scope: run() passes in the values
+      // it needs.
+      function previewShim(runId, heartbeatMs, doneDelayMs) {
         // User code can declare globals with these names (e.g. `class Node`).
         const { Array, Date, Error, JSON, Map, Node, Object, RegExp, Set } =
           window;
         const host = window.parent;
         const later = setTimeout;
         const MAX_ITEMS = 100;
+        const MAX_VALUES = 1000;
+        const MAX_DEPTH = 3;
+        const MAX_TABLE_ROWS = 1000;
 
         function post(data) {
           data.__pg = runId;
@@ -1239,7 +1265,7 @@
         }
 
         function inspect(value, top) {
-          let budget = 1000;
+          let budget = MAX_VALUES;
           const seen = [];
           const join = (items, total) =>
             items.join(", ") +
@@ -1271,7 +1297,9 @@
               return "<" + v.localName + attrs.join("") + ">";
             }
             if (seen.includes(v)) return "[Circular]";
-            if (depth > 3) return Array.isArray(v) ? "[Array]" : "[Object]";
+            if (depth > MAX_DEPTH) {
+              return Array.isArray(v) ? "[Array]" : "[Object]";
+            }
             seen.push(v);
             try {
               const next = (x) => fmt(x, depth + 1);
@@ -1360,7 +1388,7 @@
         function tableOf(data, columns) {
           try {
             const isRecord = (x) => x !== null && typeof x === "object";
-            const rows = Object.keys(data).slice(0, 1000);
+            const rows = Object.keys(data).slice(0, MAX_TABLE_ROWS);
             const keys = [];
             let hasValues = false;
             for (const row of rows) {
@@ -1433,11 +1461,67 @@
             message: "Unhandled rejection: " + inspect(e.reason, true),
           });
         });
+        // A heartbeat that stops when the page is blocked, for example by an
+        // infinite loop.
+        post({ type: "alive" });
+        setInterval(() => post({ type: "alive" }), heartbeatMs);
         // Report "done" a moment after load, so loops that start in timers or
         // load handlers also leave the run unfinished.
         addEventListener("load", () =>
-          later(() => post({ type: "done" }), 300),
+          later(() => post({ type: "done" }), doneDelayMs),
         );
+      }
+
+      // Each run gets a new iframe. A second document in the same iframe adds
+      // a history entry, and in Chrome those entries tie the iframe to a hung
+      // process: the preview then never recovers from an infinite loop.
+      // The new iframe stays invisible until it has loaded, so the old
+      // preview stays on screen and nothing flashes.
+      function startFrame(doc, hung) {
+        for (const old of frameWrap.querySelectorAll("iframe")) {
+          // All frames of a hung run share its stuck process in Chrome.
+          if (hung || old !== shownFrame) old.remove();
+        }
+        if (hung) shownFrame = null;
+        const next = frame.cloneNode(false);
+        next.classList.add("pending");
+        next.srcdoc = doc;
+        next.addEventListener("load", () => {
+          // A short wait lets the frame paint before it is shown.
+          setTimeout(() => showFrame(next), SHOW_FRAME_DELAY_MS);
+        });
+        frameWrap.insertBefore(next, pausedEl);
+        frame = next;
+      }
+
+      function showFrame(next) {
+        if (next !== frame) return;
+        if (shownFrame && shownFrame !== next) shownFrame.remove();
+        next.classList.remove("pending");
+        shownFrame = next;
+      }
+
+      // In Chrome all preview frames share one process, and the editor stays
+      // usable while it hangs. If auto-run kept going, each edit would start
+      // the same loop in a new process, and the hung processes would pile up
+      // until they used every CPU core. A slow page keeps its heartbeat, so
+      // only a blocked one counts as hung.
+      function previewHung() {
+        return !runDone && Date.now() - lastAlive > HANG_MS;
+      }
+
+      function watchHang() {
+        if (runDone) return;
+        if (previewHung()) pauseAutoRun();
+        else hangTimer = setTimeout(watchHang, HANG_CHECK_MS);
+      }
+
+      function pauseAutoRun() {
+        clearTimeout(hangTimer);
+        autoRunPaused = true;
+        pausedEl.hidden = false;
+        for (const old of frameWrap.querySelectorAll("iframe")) old.remove();
+        shownFrame = null;
       }
 
       function run() {
@@ -1445,15 +1529,15 @@
         clearConsole();
         pausedEl.hidden = true;
         localStorage.setItem(RUN_FLAG_KEY, "1");
+        const hung = previewHung();
+        // New frames get a full grace period before their first heartbeat.
+        if (hung) lastAlive = Date.now();
+        runDone = false;
 
         const html = getEditorValue(htmlEd);
         const head =
           '<!DOCTYPE html><html><head><meta charset="UTF-8">\n' +
-          "<script>(" +
-          previewShim +
-          ")(" +
-          runId +
-          ");<\/script>\n" +
+          `<script>(${previewShim})(${runId}, ${HEARTBEAT_MS}, ${DONE_DELAY_MS});<\/script>\n` +
           "<style>\n" +
           getEditorValue(cssEd) +
           "\n</style></head><body>\n";
@@ -1467,21 +1551,21 @@
         const jsUrl =
           "data:text/javascript;charset=utf-8," +
           encodeURIComponent(getEditorValue(jsEd));
-        frame.srcdoc =
-          head +
-          html +
-          '\n<script src="' +
-          jsUrl +
-          '"><\/script>\n</body></html>';
+        startFrame(
+          `${head}${html}\n<script src="${jsUrl}"><\/script>\n</body></html>`,
+          hung,
+        );
+        clearTimeout(hangTimer);
+        hangTimer = setTimeout(watchHang, HANG_CHECK_MS);
       }
 
       function scheduleRun() {
         if (autoRunPaused) return;
+        if (previewHung()) return pauseAutoRun();
         const now = Date.now();
         const elapsed = now - lastRunAt;
-        const wait = 100;
 
-        if (elapsed >= wait) {
+        if (elapsed >= RUN_THROTTLE_MS) {
           lastRunAt = now;
           run();
           return;
@@ -1492,7 +1576,7 @@
           lastRunAt = Date.now();
           run();
           throttleTimer = null;
-        }, wait - elapsed);
+        }, RUN_THROTTLE_MS - elapsed);
       }
 
       /* ── Console messages from iframe ──────────────────────────────── */
@@ -1513,9 +1597,19 @@
 
       window.addEventListener("message", function (e) {
         const data = e.data;
-        if (e.source !== frame.contentWindow || !data || data.__pg !== runId) {
+        // A removed frame has no contentWindow, which would match a null source.
+        if (!e.source || !data) return;
+        // Heartbeats from the frame on screen count too: it belongs to an
+        // older run, but it shares the process with the newest frame.
+        if (
+          data.type === "alive" &&
+          (e.source === frame.contentWindow ||
+            e.source === shownFrame?.contentWindow)
+        ) {
+          lastAlive = Date.now();
           return;
         }
+        if (e.source !== frame.contentWindow || data.__pg !== runId) return;
         if (data.type === "console") {
           appendConsole({ level: data.level, parts: data.parts });
         } else if (data.type === "table") {
@@ -1526,8 +1620,10 @@
         } else if (data.type === "clear") {
           clearConsole();
         } else if (data.type === "done") {
+          clearTimeout(hangTimer);
           localStorage.removeItem(RUN_FLAG_KEY);
           autoRunPaused = false;
+          runDone = true;
         }
       });
 
@@ -1742,7 +1838,8 @@
         () => editorsPane.offsetWidth,
         (startW, dx) => {
           const mainW = mainArea.offsetWidth;
-          const newW = Math.max(160, Math.min(startW + dx, mainW - 164));
+          const maxW = mainW - MIN_PANE_WIDTH_PX - SPLITTER_PX;
+          const newW = Math.max(MIN_PANE_WIDTH_PX, Math.min(startW + dx, maxW));
           editorsPane.style.width = ((newW / mainW) * 100).toFixed(3) + "%";
         },
       );
@@ -1763,7 +1860,7 @@
         "dragging-h",
         () => consolePn.offsetHeight,
         (startH, dx, dy) => {
-          const maxH = previewPane.offsetHeight - 80;
+          const maxH = previewPane.offsetHeight - MIN_PREVIEW_HEIGHT_PX;
           consolePn.style.height =
             Math.max(MIN_CONSOLE_HEIGHT_PX, Math.min(startH - dy, maxH)) + "px";
         },
@@ -1876,7 +1973,14 @@ button:active { transform: translateY(0); }`;
         scheduleRun();
       });
 
-      window.addEventListener("pagehide", flushSave);
+      window.addEventListener("pagehide", function () {
+        flushSave();
+        // A live preview means the pending run was only unfinished, not hung.
+        // A frozen page cannot run this handler, so its flag stays.
+        if (Date.now() - lastAlive < RECENT_HEARTBEAT_MS) {
+          localStorage.removeItem(RUN_FLAG_KEY);
+        }
+      });
       document.addEventListener("visibilitychange", function () {
         if (document.hidden) flushSave();
       });
@@ -1900,6 +2004,7 @@ button:active { transform: translateY(0); }`;
         // A run that never reported "done" probably hung: do not repeat it.
         if (localStorage.getItem(RUN_FLAG_KEY)) {
           autoRunPaused = true;
+          runDone = false;
           pausedEl.hidden = false;
         } else {
           run();
