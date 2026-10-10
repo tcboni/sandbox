@@ -13,7 +13,22 @@
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/atom-one-dark.min.css"
+      integrity="sha512-Jk4AqjWsdSzSWCSuQTfYRIF84Rq/eV0G2+tu07byYwHcbTGfdmLrHjUSwvzp5HvbiqK4ibmNwdcG49Y5RGYPTg=="
+      crossorigin="anonymous"
     />
+    <script type="importmap">
+      {
+        "imports": {
+          "highlight.js/": "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/es/"
+        },
+        "integrity": {
+          "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/es/core.min.js": "sha512-GuVoeU19Vs7el8GKo3lq2ogzwCIRBuQDnSL0rtHD4KVq3EymKgG4Uj/SEbbggJ+o+ocAcwdbn8hPSgdVPKdPlQ==",
+          "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/es/languages/xml.min.js": "sha512-jZvkUDU26sNETHOTFnjQLkt7gDw5cYRyXI4g0k4FIi2GwWuEnU7BvQY5STu8Vg2Ob9z0wLGi9A4oieJCaFBhIw==",
+          "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/es/languages/css.min.js": "sha512-AfBGlKM0Vd4ukBI4xW2+g3SUNYSE5cqr6HtzsDWkgfDOJXHHet9NbI7oHd5AdMA60GVdEkcSp4d+dG5lLbcgBQ==",
+          "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/es/languages/javascript.min.js": "sha512-0Txryarv+zun2rK0PpxEBVAyI3TJHbwzv2xrXw6Oci5aDZMk4eOFrerynyy9+IW0Ss4YHLUZ/zYEvdEiKZAxiA=="
+        }
+      }
+    </script>
 
     <style>
       *,
@@ -34,10 +49,7 @@
         --muted: #848a91;
         --accent: #7e9cb5;
         --accent-hi: #93b1c9;
-        --green: #98c379;
-        --orange: #d19a66;
         --blue: #61afef;
-        --purple: #c678dd;
         --yellow: #e5c07b;
         --cyan: #56b6c2;
         --red: #e06c75;
@@ -129,13 +141,12 @@
       .btn svg {
         flex-shrink: 0;
       }
-      .btn-secondary {
-        background: transparent;
-        color: var(--muted);
+      .btn-primary {
+        color: #10161b;
+        background: var(--accent);
       }
-      .btn-secondary:hover {
-        background: var(--bg-2);
-        color: var(--text);
+      .btn-primary:hover {
+        background: var(--accent-hi);
       }
       .btn-ghost {
         background: transparent;
@@ -152,15 +163,6 @@
         background: rgba(126, 156, 181, 0.14);
       }
 
-      #btn-share {
-        color: #10161b;
-        background: var(--accent);
-        border: 1px solid transparent;
-      }
-      #btn-share:hover {
-        background: var(--accent-hi);
-      }
-
       /* ─── Main layout ─────────────────────────────────────────── */
       #main {
         flex: 1;
@@ -170,7 +172,7 @@
 
       /* ─── Editors pane ────────────────────────────────────────── */
       #editors-pane {
-        width: 50%;
+        width: 40%;
         min-width: 160px;
         max-width: calc(100% - 160px);
         display: flex;
@@ -181,12 +183,14 @@
       .editor-panel {
         display: flex;
         flex-direction: column;
-        flex: 0 0 auto;
+        flex: 1 1 0;
         min-height: 50px;
         overflow: hidden;
       }
 
-      .editor-tab {
+      .editor-tab,
+      .preview-tab,
+      .console-tab {
         height: var(--tab-h);
         background: var(--bg-1);
         border-bottom: 1px solid var(--border);
@@ -294,17 +298,6 @@
         min-width: 160px;
       }
 
-      .preview-tab {
-        height: var(--tab-h);
-        background: var(--bg-1);
-        border-bottom: 1px solid var(--border);
-        display: flex;
-        align-items: center;
-        padding: 0 13px;
-        gap: 8px;
-        flex-shrink: 0;
-        user-select: none;
-      }
       .preview-tab .tab-dot {
         background: #3ecf6e;
         box-shadow: 0 0 6px rgba(62, 207, 110, 0.55);
@@ -350,6 +343,28 @@
         display: block;
       }
 
+      #paused {
+        position: absolute;
+        inset: 0;
+        z-index: 40;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 24px;
+        text-align: center;
+        background: var(--bg-0);
+      }
+      #paused[hidden] {
+        display: none;
+      }
+      #paused p {
+        max-width: 300px;
+        line-height: 1.5;
+        color: var(--muted);
+      }
+
       /* ─── Console ─────────────────────────────────────────────── */
       #console-resize {
         display: none;
@@ -368,17 +383,6 @@
         display: flex;
       }
 
-      .console-tab {
-        height: var(--tab-h);
-        background: var(--bg-1);
-        border-bottom: 1px solid var(--border);
-        display: flex;
-        align-items: center;
-        padding: 0 13px;
-        gap: 8px;
-        flex-shrink: 0;
-        user-select: none;
-      }
       .console-tab .tab-dot {
         background: var(--cyan);
       }
@@ -438,6 +442,9 @@
       .c-entry.info {
         color: var(--blue);
       }
+      .c-entry.debug {
+        color: var(--muted);
+      }
 
       .c-gutter {
         width: 32px;
@@ -447,7 +454,8 @@
         font-size: 10px;
         opacity: 0.5;
       }
-      .c-entry.log .c-gutter::before {
+      .c-entry.log .c-gutter::before,
+      .c-entry.debug .c-gutter::before {
         content: "›";
       }
       .c-entry.warn .c-gutter::before {
@@ -463,9 +471,27 @@
 
       .c-msg {
         flex: 1;
+        min-width: 0;
+        overflow-x: auto;
         padding-right: 12px;
         white-space: pre-wrap;
         word-break: break-all;
+      }
+
+      .c-table {
+        border-collapse: collapse;
+        margin: 2px 0;
+      }
+      .c-table th,
+      .c-table td {
+        padding: 1px 8px;
+        border: 1px solid var(--border);
+        text-align: left;
+        white-space: pre;
+      }
+      .c-table th {
+        color: var(--muted);
+        font-weight: 600;
       }
 
       /* ─── Toast ───────────────────────────────────────────────── */
@@ -493,10 +519,6 @@
       #toast.show {
         transform: translateX(-50%) translateY(0);
       }
-      #toast.ok .toast-icon::before {
-        content: "✓";
-        color: var(--green);
-      }
       #toast.copy .toast-icon::before {
         content: "";
         display: inline-block;
@@ -509,6 +531,40 @@
         mask-size: contain;
         -webkit-mask-repeat: no-repeat;
         mask-repeat: no-repeat;
+      }
+
+      /* ─── Share link fallback ─────────────────────────────────── */
+      #share-pop {
+        inset: 52px 14px auto auto;
+        width: min(420px, calc(100vw - 28px));
+        margin: 0;
+        padding: 12px;
+        color: var(--text);
+        background: var(--bg-2);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+      }
+      #share-pop label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      #share-url {
+        width: 100%;
+        padding: 6px 8px;
+        font-family:
+          "SF Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
+        font-size: 12px;
+        color: var(--text);
+        background: var(--bg-0);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        outline: none;
+      }
+      #share-url:focus {
+        border-color: var(--accent);
       }
 
       /* ─── Scrollbars ──────────────────────────────────────────── */
@@ -562,7 +618,7 @@
         <span class="logo-text">Sandbox</span>
       </div>
       <div class="header-right">
-        <button class="btn btn-secondary" id="btn-share">
+        <button class="btn btn-primary" id="btn-share">
           <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor">
             <path
               d="M7.775 3.275a.75.75 0 001.06 1.06l1.25-1.25a2 2 0 112.83 2.83l-2.5 2.5a2 2 0 01-2.83 0 .75.75 0 00-1.06 1.06 3.5 3.5 0 004.95 0l2.5-2.5a3.5 3.5 0 00-4.95-4.95l-1.25 1.25zm-4.69 9.64a2 2 0 010-2.83l2.5-2.5a2 2 0 012.83 0 .75.75 0 001.06-1.06 3.5 3.5 0 00-4.95 0l-2.5 2.5a3.5 3.5 0 004.95 4.95l1.25-1.25a.75.75 0 00-1.06-1.06l-1.25 1.25a2 2 0 01-2.83 0z"
@@ -581,7 +637,6 @@
           <svg
             width="20"
             height="20"
-            class="github-icon"
             viewBox="0 0 24 24"
             xmlns="http://www.w3.org/2000/svg"
           >
@@ -702,6 +757,14 @@
             id="preview-frame"
             sandbox="allow-scripts allow-modals allow-forms"
           ></iframe>
+          <div id="paused" hidden>
+            <strong>Auto-run paused</strong>
+            <p>
+              The last run did not finish. Your code may have an infinite loop.
+              Fix it, then click Run.
+            </p>
+            <button class="btn btn-primary" id="btn-run">Run</button>
+          </div>
           <div id="drag-shield"></div>
         </div>
 
@@ -725,12 +788,18 @@
       <span class="toast-icon"></span><span id="toast-msg"></span>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+    <div id="share-pop" popover>
+      <label for="share-url">Copy this link</label>
+      <input id="share-url" readonly spellcheck="false" />
+    </div>
+
     <script>
       "use strict";
 
       /* ── Elements ──────────────────────────────────────────────────── */
       const frame = document.getElementById("preview-frame");
+      const previewPane = document.getElementById("preview-pane");
+      const pausedEl = document.getElementById("paused");
       const consolePn = document.getElementById("console-pane");
       const consoleRes = document.getElementById("console-resize");
       const consoleOut = document.getElementById("console-output");
@@ -744,6 +813,9 @@
       const toastEl = document.getElementById("toast");
       const toastMsg = document.getElementById("toast-msg");
       const btnConsole = document.getElementById("btn-console");
+      const btnShare = document.getElementById("btn-share");
+      const sharePop = document.getElementById("share-pop");
+      const shareUrlInput = document.getElementById("share-url");
 
       /* ── Editors ────────────────────────────────────────── */
       const htmlEd = document.getElementById("html-ed");
@@ -871,7 +943,7 @@
         applySnapshot(editor, prev, language);
         h.suspended = false;
         scheduleRun();
-        saveCode();
+        scheduleSave();
       }
 
       function redoEditor(editor, language) {
@@ -885,7 +957,7 @@
         applySnapshot(editor, next, language);
         h.suspended = false;
         scheduleRun();
-        saveCode();
+        scheduleSave();
       }
 
       function bindEditorBehavior(editor, language) {
@@ -898,7 +970,7 @@
         editor.addEventListener("input", () => {
           renderHighlightedEditor(editor, language);
           scheduleRun();
-          saveCode();
+          scheduleSave();
         });
 
         editor.addEventListener("paste", (e) => {
@@ -908,7 +980,7 @@
           insertAtCaret(text);
           renderHighlightedEditor(editor, language);
           scheduleRun();
-          saveCode();
+          scheduleSave();
         });
 
         editor.addEventListener("keydown", (e) => {
@@ -930,7 +1002,7 @@
           insertAtCaret("  ");
           renderHighlightedEditor(editor, language);
           scheduleRun();
-          saveCode();
+          scheduleSave();
         });
       }
 
@@ -943,6 +1015,10 @@
       /* ── State ─────────────────────────────────────────────────────── */
       let throttleTimer = null;
       let lastRunAt = 0;
+      let runId = 0;
+      let autoRunPaused = false;
+      let htmlLines = null;
+      let saveTimer = null;
       let logCount = 0;
       let consoleOpen = false;
       let appState = {
@@ -976,23 +1052,12 @@
         }
       }
 
-      const EDITOR_HANDLE_PX = 8;
       const MIN_EDITOR_PANEL_PX = 50;
       const DEFAULT_CONSOLE_HEIGHT_PX = 190;
       const MIN_CONSOLE_HEIGHT_PX = 60;
-
-      function getEditorUsableHeight() {
-        return Math.max(0, editorsPane.offsetHeight - EDITOR_HANDLE_PX);
-      }
-
-      function pxToPanelPercent(px) {
-        const usable = getEditorUsableHeight();
-        return usable > 0 ? (px / usable) * 100 : 0;
-      }
-
-      function panelPercentToScale(percent) {
-        return Math.max(0, percent / 100);
-      }
+      const SAVE_DELAY_MS = 500;
+      const RUN_FLAG_KEY = "sandbox-run-pending";
+      const editorPanels = [htmlPanel, cssPanel, jsPanel];
 
       function normalizeConsoleHeight(value) {
         const n = parseFloat(value);
@@ -1002,26 +1067,14 @@
         return n + "px";
       }
 
-      function getPanelPercent(panel) {
-        const usable = getEditorUsableHeight();
-        return usable > 0 ? (panel.offsetHeight / usable) * 100 : 0;
-      }
-
-      function setEditorHeights(htmlPct, cssPct, jsPct) {
-        const htmlScale = panelPercentToScale(htmlPct);
-        const cssScale = panelPercentToScale(cssPct);
-        const jsScale = panelPercentToScale(jsPct);
-        const containerH = editorsPane.offsetHeight;
-        const usableRatio =
-          containerH > 0 ? getEditorUsableHeight() / containerH : 0;
-        htmlPanel.style.height =
-          (htmlScale * usableRatio * 100).toFixed(6) + "%";
-        cssPanel.style.height = (cssScale * usableRatio * 100).toFixed(6) + "%";
-        jsPanel.style.height = (jsScale * usableRatio * 100).toFixed(6) + "%";
+      function setPanelHeights(heights) {
+        editorPanels.forEach((panel, i) => {
+          panel.style.flexGrow = heights[i];
+        });
       }
 
       function normalizeEditorWidth(value) {
-        if (!value) return "50%";
+        if (!value) return "40%";
         if (value.endsWith("%")) return value;
         if (value.endsWith("px")) {
           return (
@@ -1032,6 +1085,8 @@
       }
 
       function saveCode() {
+        clearTimeout(saveTimer);
+        saveTimer = null;
         appState.code = {
           h: getEditorValue(htmlEd),
           c: getEditorValue(cssEd),
@@ -1040,15 +1095,27 @@
         saveState();
       }
 
+      function scheduleSave() {
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(saveCode, SAVE_DELAY_MS);
+      }
+
+      function flushSave() {
+        if (saveTimer) saveCode();
+      }
+
       function saveDimensions() {
         const widthPct =
           ((editorsPane.offsetWidth / mainArea.offsetWidth) * 100).toFixed(3) +
           "%";
+        const heights = editorPanels.map((panel) => panel.offsetHeight);
+        const total = heights.reduce((sum, h) => sum + h, 0);
+        const toPct = (h) => ((h / total) * 100).toFixed(3) + "%";
         appState.dimensions = {
           editorsW: widthPct,
-          htmlH: getPanelPercent(htmlPanel).toFixed(3) + "%",
-          cssH: getPanelPercent(cssPanel).toFixed(3) + "%",
-          jsH: getPanelPercent(jsPanel).toFixed(3) + "%",
+          htmlH: toPct(heights[0]),
+          cssH: toPct(heights[1]),
+          jsH: toPct(heights[2]),
           consoleH: normalizeConsoleHeight(
             consolePn.style.height || consolePn.offsetHeight + "px",
           ),
@@ -1077,88 +1144,338 @@
       function toast(msg, type) {
         clearTimeout(toastTimer);
         toastMsg.textContent = msg;
-        toastEl.className = "show " + (type || "ok");
+        toastEl.className = "show " + type;
         toastTimer = setTimeout(function () {
           toastEl.className = "";
         }, 2600);
       }
 
       /* ── URL state ─────────────────────────────────────────────────── */
-      function encodeState() {
-        return btoa(
-          unescape(
-            encodeURIComponent(
-              JSON.stringify({
-                h: getEditorValue(htmlEd),
-                c: getEditorValue(cssEd),
-                j: getEditorValue(jsEd),
-              }),
-            ),
-          ),
+      const SHARE_PREFIX = "code/";
+
+      function bytesToBase64Url(bytes) {
+        let binary = "";
+        for (const byte of bytes) binary += String.fromCharCode(byte);
+        return btoa(binary)
+          .replace(/\+/g, "-")
+          .replace(/\//g, "_")
+          .replace(/=+$/, "");
+      }
+
+      function base64ToBytes(value) {
+        const binary = atob(value.replace(/-/g, "+").replace(/_/g, "/"));
+        return Uint8Array.from(binary, (char) => char.charCodeAt(0));
+      }
+
+      function pipeBytes(bytes, transform) {
+        const stream = new Blob([bytes]).stream().pipeThrough(transform);
+        return new Response(stream).arrayBuffer();
+      }
+
+      function currentCodeJson() {
+        return JSON.stringify({
+          h: getEditorValue(htmlEd),
+          c: getEditorValue(cssEd),
+          j: getEditorValue(jsEd),
+        });
+      }
+
+      async function encodeShare(json) {
+        const packed = await pipeBytes(
+          new TextEncoder().encode(json),
+          new CompressionStream("deflate-raw"),
         );
+        return SHARE_PREFIX + bytesToBase64Url(new Uint8Array(packed));
       }
 
-      function decodeState(b64) {
-        try {
-          const s = JSON.parse(decodeURIComponent(escape(atob(b64))));
-          if (s.h !== undefined) setEditorValue(htmlEd, s.h);
-          if (s.c !== undefined) setEditorValue(cssEd, s.c);
-          if (s.j !== undefined) setEditorValue(jsEd, s.j);
-          return true;
-        } catch {
-          return false;
+      // Links made before compression hold plain base64 JSON with no prefix.
+      async function decodeShare(hash) {
+        const packed = hash.startsWith(SHARE_PREFIX);
+        let bytes = base64ToBytes(
+          packed ? hash.slice(SHARE_PREFIX.length) : hash,
+        );
+        if (packed) {
+          bytes = await pipeBytes(
+            bytes,
+            new DecompressionStream("deflate-raw"),
+          );
         }
+        return JSON.parse(new TextDecoder().decode(bytes));
       }
 
-      function loadFromURL() {
+      async function readSharedCode() {
         const hash = location.hash.slice(1);
-        if (hash && decodeState(hash)) {
+        if (!hash) return null;
+        try {
+          const code = await decodeShare(hash);
           history.replaceState(null, "", location.pathname + location.search);
-          return true;
+          return code;
+        } catch {
+          return null;
         }
-        return false;
+      }
+
+      function applyCode(code) {
+        if (code.h !== undefined) setEditorValue(htmlEd, code.h);
+        if (code.c !== undefined) setEditorValue(cssEd, code.c);
+        if (code.j !== undefined) setEditorValue(jsEd, code.j);
       }
 
       /* ── Run preview ───────────────────────────────────────────────── */
+      // Runs inside the preview iframe. run() injects its source text, so it
+      // must not use anything from the outer scope.
+      function previewShim(runId) {
+        // User code can declare globals with these names (e.g. `class Node`).
+        const { Array, Date, Error, JSON, Map, Node, Object, RegExp, Set } =
+          window;
+        const host = window.parent;
+        const later = setTimeout;
+        const MAX_ITEMS = 100;
+
+        function post(data) {
+          data.__pg = runId;
+          host.postMessage(data, "*");
+        }
+
+        function inspect(value, top) {
+          let budget = 1000;
+          const seen = [];
+          const join = (items, total) =>
+            items.join(", ") +
+            (total > items.length
+              ? ", … " + (total - items.length) + " more"
+              : "");
+          const fmt = (v, depth) => {
+            if (--budget < 0) return "…";
+            if (typeof v === "string") return depth ? JSON.stringify(v) : v;
+            if (typeof v === "number") {
+              return Object.is(v, -0) ? "-0" : String(v);
+            }
+            if (typeof v === "bigint") return v + "n";
+            if (typeof v === "function") {
+              return depth ? "ƒ " + (v.name || "anonymous") + "()" : String(v);
+            }
+            if (v === null || typeof v !== "object") return String(v);
+            if (v instanceof Error) return String(v);
+            if (v instanceof Date) {
+              return isNaN(v) ? "Invalid Date" : v.toISOString();
+            }
+            if (v instanceof RegExp) return String(v);
+            if (v instanceof Node) {
+              if (v.nodeType !== 1) return v.nodeName;
+              const attrs = Array.from(
+                v.attributes,
+                (a) => ` ${a.name}="${a.value}"`,
+              );
+              return "<" + v.localName + attrs.join("") + ">";
+            }
+            if (seen.includes(v)) return "[Circular]";
+            if (depth > 3) return Array.isArray(v) ? "[Array]" : "[Object]";
+            seen.push(v);
+            try {
+              const next = (x) => fmt(x, depth + 1);
+              if (Array.isArray(v)) {
+                return (
+                  "[" + join(v.slice(0, MAX_ITEMS).map(next), v.length) + "]"
+                );
+              }
+              if (v instanceof Map) {
+                const entries = Array.from(v)
+                  .slice(0, MAX_ITEMS)
+                  .map(([k, x]) => next(k) + " => " + next(x));
+                return `Map(${v.size}) {` + join(entries, v.size) + "}";
+              }
+              if (v instanceof Set) {
+                const values = Array.from(v).slice(0, MAX_ITEMS).map(next);
+                return `Set(${v.size}) {` + join(values, v.size) + "}";
+              }
+              const keys = Object.keys(v);
+              const proto = Object.getPrototypeOf(v);
+              const name =
+                proto && proto !== Object.prototype
+                  ? proto.constructor?.name
+                  : "";
+              const props = keys
+                .slice(0, MAX_ITEMS)
+                .map(
+                  (k) =>
+                    (/^[A-Za-z_$][\w$]*$/.test(k) ? k : JSON.stringify(k)) +
+                    ": " +
+                    next(v[k]),
+                );
+              return (
+                (name ? name + " " : "") + "{" + join(props, keys.length) + "}"
+              );
+            } finally {
+              seen.pop();
+            }
+          };
+          try {
+            return fmt(value, top ? 0 : 1);
+          } catch {
+            return "[unprintable]";
+          }
+        }
+
+        function format(args) {
+          const parts = [{ text: "", css: "" }];
+          const add = (text) => {
+            parts[parts.length - 1].text += text;
+          };
+          let used = 0;
+          if (typeof args[0] === "string" && args.length > 1) {
+            used = 1;
+            args[0].split(/(%[sdifoOc%])/).forEach((token, i) => {
+              if (i % 2 === 0) return add(token);
+              const type = token[1];
+              if (type === "%") return add("%");
+              if (used >= args.length) return add(token);
+              const arg = args[used++];
+              if (type === "c") parts.push({ text: "", css: String(arg) });
+              else if (type === "d" || type === "i") {
+                add(String(parseInt(arg, 10)));
+              } else if (type === "f") add(String(parseFloat(arg)));
+              else add(inspect(arg, type === "s"));
+            });
+          }
+          const rest = args.slice(used).map((arg) => inspect(arg, true));
+          if (rest.length) {
+            parts.push({ text: (used ? " " : "") + rest.join(" "), css: "" });
+          }
+          return parts.filter((part) => part.text);
+        }
+
+        function emit(level, args, prefix) {
+          let parts;
+          try {
+            parts = format(args);
+          } catch {
+            parts = [{ text: "[unprintable]", css: "" }];
+          }
+          if (prefix) parts.unshift({ text: prefix, css: "" });
+          post({ type: "console", level, parts });
+        }
+
+        function tableOf(data, columns) {
+          try {
+            const isRecord = (x) => x !== null && typeof x === "object";
+            const rows = Object.keys(data).slice(0, 1000);
+            const keys = [];
+            let hasValues = false;
+            for (const row of rows) {
+              if (!isRecord(data[row])) hasValues = true;
+              else {
+                for (const key of Object.keys(data[row])) {
+                  if (!keys.includes(key)) keys.push(key);
+                }
+              }
+            }
+            const shown = Array.isArray(columns) ? columns.map(String) : keys;
+            return {
+              head: ["(index)", ...shown, ...(hasValues ? ["Value"] : [])],
+              rows: rows.map((row) => {
+                const item = data[row];
+                const cells = shown.map((key) =>
+                  isRecord(item) && key in item ? inspect(item[key]) : "",
+                );
+                if (hasValues) cells.push(isRecord(item) ? "" : inspect(item));
+                return [row, ...cells];
+              }),
+            };
+          } catch {
+            return null;
+          }
+        }
+
+        const original = { ...console };
+        for (const method of ["log", "info", "warn", "error", "debug", "dir"]) {
+          console[method] = (...args) => {
+            emit(method === "dir" ? "log" : method, args);
+            original[method].apply(console, args);
+          };
+        }
+        console.assert = (ok, ...args) => {
+          if (!ok) {
+            emit(
+              "error",
+              args,
+              args.length ? "Assertion failed: " : "Assertion failed",
+            );
+          }
+          original.assert.call(console, ok, ...args);
+        };
+        console.clear = () => {
+          post({ type: "clear" });
+          original.clear.call(console);
+        };
+        console.table = (...args) => {
+          const [data, columns] = args;
+          const table =
+            data !== null && typeof data === "object" && tableOf(data, columns);
+          if (table) post({ type: "table", ...table });
+          else emit("log", args.slice(0, 1));
+          original.table.apply(console, args);
+        };
+
+        addEventListener("error", (e) => {
+          const file = String(e.filename || "");
+          post({
+            type: "error",
+            message: e.message,
+            line: e.lineno,
+            file: file.startsWith("data:") ? "data:" : file,
+          });
+        });
+        addEventListener("unhandledrejection", (e) => {
+          post({
+            type: "error",
+            message: "Unhandled rejection: " + inspect(e.reason, true),
+          });
+        });
+        // Report "done" a moment after load, so loops that start in timers or
+        // load handlers also leave the run unfinished.
+        addEventListener("load", () =>
+          later(() => post({ type: "done" }), 300),
+        );
+      }
+
       function run() {
-        const consoleInjection = `<script>(function(){
-var _p=function(l,a){
-  var s=Array.from(a).map(function(x){
-    try{return typeof x==='object'&&x!==null?JSON.stringify(x,null,2):String(x);}
-    catch(e){return '[Object]';}
-  }).join(' ');
-  window.parent.postMessage({__pg_console:1,level:l,msg:s},'*');
-};
-['log','warn','error','info'].forEach(function(m){
-  var o=console[m];
-  console[m]=function(){_p(m,arguments);o.apply(console,arguments);};
-});
-window.addEventListener('error',function(e){
-  window.parent.postMessage({__pg_console:1,level:'error',msg:e.message+(e.lineno?' (line '+e.lineno+')':'')},'*');
-});
-window.addEventListener('unhandledrejection',function(e){
-  window.parent.postMessage({__pg_console:1,level:'error',msg:'Unhandled rejection: '+(e.reason&&e.reason.message||e.reason)},'*');
-});
-})();<\/script>`;
+        runId++;
+        clearConsole();
+        pausedEl.hidden = true;
+        localStorage.setItem(RUN_FLAG_KEY, "1");
 
-        const src =
+        const html = getEditorValue(htmlEd);
+        const head =
           '<!DOCTYPE html><html><head><meta charset="UTF-8">\n' +
-          "<style>" +
+          "<script>(" +
+          previewShim +
+          ")(" +
+          runId +
+          ");<\/script>\n" +
+          "<style>\n" +
           getEditorValue(cssEd) +
-          "</style></head><body>\n" +
-          getEditorValue(htmlEd) +
-          "\n" +
-          consoleInjection +
-          "\n" +
-          "<script>try{" +
-          getEditorValue(jsEd) +
-          "}catch(e){console.error(e.message);}<\/script>\n" +
-          "</body></html>";
-
-        frame.srcdoc = src;
+          "\n</style></head><body>\n";
+        htmlLines = {
+          start: head.split("\n").length,
+          count: html.split("\n").length,
+        };
+        // A data: URL keeps error details in Safari, which hides them for
+        // inline scripts in a sandboxed frame. It also stops a closing script
+        // tag inside the code from ending the element.
+        const jsUrl =
+          "data:text/javascript;charset=utf-8," +
+          encodeURIComponent(getEditorValue(jsEd));
+        frame.srcdoc =
+          head +
+          html +
+          '\n<script src="' +
+          jsUrl +
+          '"><\/script>\n</body></html>';
       }
 
       function scheduleRun() {
+        if (autoRunPaused) return;
         const now = Date.now();
         const elapsed = now - lastRunAt;
         const wait = 100;
@@ -1178,66 +1495,186 @@ window.addEventListener('unhandledrejection',function(e){
       }
 
       /* ── Console messages from iframe ──────────────────────────────── */
+      const CONSOLE_LIMIT = 1000;
+      // Only these %c properties apply, so styles cannot leave the console.
+      const CONSOLE_STYLES = [
+        "color",
+        "background-color",
+        "font-weight",
+        "font-style",
+        "text-decoration",
+        "padding",
+        "border-radius",
+      ];
+      const styleReader = document.createElement("span");
+      let consoleQueue = [];
+      let consoleFlushQueued = false;
+
       window.addEventListener("message", function (e) {
-        if (!e.data || !e.data.__pg_console) return;
-        appendConsole(e.data.level, e.data.msg);
+        const data = e.data;
+        if (e.source !== frame.contentWindow || !data || data.__pg !== runId) {
+          return;
+        }
+        if (data.type === "console") {
+          appendConsole({ level: data.level, parts: data.parts });
+        } else if (data.type === "table") {
+          appendConsole({ level: "log", table: data });
+        } else if (data.type === "error") {
+          const text = data.message + sourceLocation(data.line, data.file);
+          appendConsole({ level: "error", parts: [{ text, css: "" }] });
+        } else if (data.type === "clear") {
+          clearConsole();
+        } else if (data.type === "done") {
+          localStorage.removeItem(RUN_FLAG_KEY);
+          autoRunPaused = false;
+        }
       });
 
-      function appendConsole(level, msg) {
-        logCount++;
-        consoleCount.textContent = logCount;
-        consoleCount.classList.add("visible");
+      function sourceLocation(line, file) {
+        if (!line) return "";
+        if (file === "data:") return ` (JS line ${line})`;
+        const { start, count } = htmlLines;
+        if (file === "about:srcdoc" && line >= start && line < start + count) {
+          return ` (HTML line ${line - start + 1})`;
+        }
+        return "";
+      }
 
+      function appendConsole(entry) {
+        logCount++;
+        consoleQueue.push(entry);
+        if (consoleQueue.length > 2 * CONSOLE_LIMIT) {
+          consoleQueue = consoleQueue.slice(-CONSOLE_LIMIT);
+        }
+        if (!consoleFlushQueued) {
+          consoleFlushQueued = true;
+          requestAnimationFrame(flushConsole);
+        }
+      }
+
+      function flushConsole() {
+        consoleFlushQueued = false;
+        const rows = document.createDocumentFragment();
+        for (const entry of consoleQueue.slice(-CONSOLE_LIMIT)) {
+          rows.appendChild(renderEntry(entry));
+        }
+        consoleQueue = [];
+        consoleOut.appendChild(rows);
+        while (consoleOut.childElementCount > CONSOLE_LIMIT) {
+          consoleOut.firstElementChild.remove();
+        }
+        consoleCount.textContent = logCount;
+        consoleCount.classList.toggle("visible", logCount > 0);
+        consoleOut.scrollTop = consoleOut.scrollHeight;
+      }
+
+      function renderEntry(entry) {
         const row = document.createElement("div");
-        row.className = "c-entry " + (level || "log");
+        row.className = "c-entry " + (entry.level || "log");
 
         const gut = document.createElement("span");
         gut.className = "c-gutter";
 
         const txt = document.createElement("span");
         txt.className = "c-msg";
-        txt.textContent = msg;
+        if (entry.table) {
+          txt.appendChild(renderTable(entry.table));
+        } else {
+          for (const part of entry.parts) {
+            txt.appendChild(
+              part.css ? styledText(part) : document.createTextNode(part.text),
+            );
+          }
+        }
 
         row.appendChild(gut);
         row.appendChild(txt);
-        consoleOut.appendChild(row);
-        consoleOut.scrollTop = consoleOut.scrollHeight;
+        return row;
+      }
+
+      function styledText(part) {
+        const span = document.createElement("span");
+        span.textContent = part.text;
+        styleReader.style.cssText = part.css;
+        for (const name of CONSOLE_STYLES) {
+          span.style.setProperty(
+            name,
+            styleReader.style.getPropertyValue(name),
+          );
+        }
+        return span;
+      }
+
+      function renderTable(data) {
+        const table = document.createElement("table");
+        table.className = "c-table";
+        for (const cells of [data.head, ...data.rows]) {
+          const tr = table.insertRow();
+          for (const text of cells) {
+            const cell = document.createElement(
+              cells === data.head ? "th" : "td",
+            );
+            cell.textContent = text;
+            tr.appendChild(cell);
+          }
+        }
+        return table;
       }
 
       function clearConsole() {
         consoleOut.innerHTML = "";
+        consoleQueue = [];
         logCount = 0;
         consoleCount.textContent = "0";
         consoleCount.classList.remove("visible");
       }
 
       /* ── Button handlers ───────────────────────────────────────────── */
-      document
-        .getElementById("btn-refresh")
-        .addEventListener("click", function () {
-          clearConsole();
-          run();
-        });
+      document.getElementById("btn-refresh").addEventListener("click", run);
+      document.getElementById("btn-run").addEventListener("click", run);
 
-      document
-        .getElementById("btn-share")
-        .addEventListener("click", function () {
-          const encoded = encodeState();
-          const url = location.origin + location.pathname + "#" + encoded;
-          if (navigator.clipboard) {
-            navigator.clipboard.writeText(url).then(function () {
-              toast("URL copied to clipboard", "copy");
-            });
-          } else {
-            const tmp = document.createElement("textarea");
-            tmp.value = url;
-            document.body.appendChild(tmp);
-            tmp.select();
-            document.execCommand("copy");
-            document.body.removeChild(tmp);
-            toast("URL copied to clipboard", "copy");
-          }
-        });
+      let shareCache = { json: "", url: "" };
+
+      async function prepareShareUrl() {
+        const json = currentCodeJson();
+        if (shareCache.json !== json) {
+          const hash = await encodeShare(json);
+          const url = location.origin + location.pathname + "#" + hash;
+          shareCache = { json, url };
+        }
+        return shareCache.url;
+      }
+
+      function showShareLink(url) {
+        shareUrlInput.value = url;
+        sharePop.showPopover();
+        shareUrlInput.focus();
+        shareUrlInput.select();
+      }
+
+      function shareLink(url) {
+        if (navigator.share && matchMedia("(pointer: coarse)").matches) {
+          navigator.share({ url }).catch((err) => {
+            if (err.name !== "AbortError") showShareLink(url);
+          });
+        } else if (navigator.clipboard) {
+          navigator.clipboard.writeText(url).then(
+            () => toast("URL copied to clipboard", "copy"),
+            () => showShareLink(url),
+          );
+        } else {
+          showShareLink(url);
+        }
+      }
+
+      // Build the link before the click, so the click handler can call the
+      // clipboard or share API directly. Safari can reject them after an await.
+      btnShare.addEventListener("pointerdown", prepareShareUrl);
+      btnShare.addEventListener("focus", prepareShareUrl);
+      btnShare.addEventListener("click", function () {
+        if (shareCache.json === currentCodeJson()) shareLink(shareCache.url);
+        else prepareShareUrl().then(shareLink);
+      });
 
       btnConsole.addEventListener("click", toggleConsole);
       document
@@ -1252,186 +1689,84 @@ window.addEventListener('unhandledrejection',function(e){
         saveConsole();
       }
 
-      /* ── Resize: vertical split (editors ↔ preview) ────────────────── */
-      {
-        const handle = document.getElementById("rv");
-        let dragging = false,
-          startX = 0,
-          startW = 0;
+      /* ── Resize ────────────────────────────────────────────────────── */
+      function makeSplitter(handle, cursorClass, begin, move) {
+        let drag = null;
 
         handle.addEventListener("mousedown", function (e) {
-          dragging = true;
-          startX = e.clientX;
-          startW = editorsPane.offsetWidth;
-          dragStart("dragging");
+          drag = { x: e.clientX, y: e.clientY, start: begin() };
+          dragStart(cursorClass);
           handle.classList.add("dragging");
           e.preventDefault();
         });
 
         document.addEventListener("mousemove", function (e) {
-          if (!dragging) return;
+          if (drag) move(drag.start, e.clientX - drag.x, e.clientY - drag.y);
+        });
+
+        document.addEventListener("mouseup", function () {
+          if (!drag) return;
+          drag = null;
+          dragEnd(cursorClass);
+          handle.classList.remove("dragging");
+          saveDimensions();
+        });
+      }
+
+      // Moves the boundary below panel i. The nearest panel gives up space
+      // first; a panel at its minimum passes the rest to the next one.
+      function moveBoundary(heights, i, delta) {
+        const next = heights.slice();
+        const step = delta > 0 ? 1 : -1;
+        let wanted = Math.abs(delta);
+        let moved = 0;
+        let k = delta > 0 ? i + 1 : i;
+        while (wanted > 0 && k >= 0 && k < next.length) {
+          const take = Math.min(
+            wanted,
+            Math.max(0, next[k] - MIN_EDITOR_PANEL_PX),
+          );
+          next[k] -= take;
+          wanted -= take;
+          moved += take;
+          k += step;
+        }
+        next[delta > 0 ? i : i + 1] += moved;
+        return next;
+      }
+
+      makeSplitter(
+        document.getElementById("rv"),
+        "dragging",
+        () => editorsPane.offsetWidth,
+        (startW, dx) => {
           const mainW = mainArea.offsetWidth;
-          const newW = Math.max(
-            160,
-            Math.min(startW + e.clientX - startX, mainW - 164),
-          );
+          const newW = Math.max(160, Math.min(startW + dx, mainW - 164));
           editorsPane.style.width = ((newW / mainW) * 100).toFixed(3) + "%";
-        });
+        },
+      );
 
-        document.addEventListener("mouseup", function () {
-          if (!dragging) return;
-          dragging = false;
-          dragEnd("dragging");
-          handle.classList.remove("dragging");
-          saveDimensions();
-        });
-      }
+      ["rh1", "rh2"].forEach((id, i) => {
+        makeSplitter(
+          document.getElementById(id),
+          "dragging-h",
+          () => editorPanels.map((panel) => panel.offsetHeight),
+          (startHeights, dx, dy) => {
+            setPanelHeights(moveBoundary(startHeights, i, dy));
+          },
+        );
+      });
 
-      /* ── Resize: horizontal split 1 (html ↔ css+js) ───────────────── */
-      {
-        const handle = document.getElementById("rh1");
-        let dragging = false,
-          startY = 0,
-          startH = 0,
-          startCssH = 0,
-          startJsH = 0;
-
-        handle.addEventListener("mousedown", function (e) {
-          dragging = true;
-          startY = e.clientY;
-          startH = htmlPanel.offsetHeight;
-          startCssH = cssPanel.offsetHeight;
-          startJsH = jsPanel.offsetHeight;
-          dragStart("dragging-h");
-          handle.classList.add("dragging");
-          e.preventDefault();
-        });
-
-        document.addEventListener("mousemove", function (e) {
-          if (!dragging) return;
-          const delta = e.clientY - startY;
-          const usableH = getEditorUsableHeight();
-          const startSecondSplit = startH + startCssH;
-          const minHtmlH = MIN_EDITOR_PANEL_PX;
-          const maxHtmlH = usableH - MIN_EDITOR_PANEL_PX * 2;
-          const newHtmlH = Math.max(
-            minHtmlH,
-            Math.min(startH + delta, maxHtmlH),
-          );
-
-          let cssH = startSecondSplit - newHtmlH;
-          let jsH = startJsH;
-
-          // If CSS hits minimum, keep CSS visible and push second splitter down.
-          if (cssH < MIN_EDITOR_PANEL_PX) {
-            cssH = MIN_EDITOR_PANEL_PX;
-            jsH = Math.max(MIN_EDITOR_PANEL_PX, usableH - newHtmlH - cssH);
-          }
-
-          const htmlPct = pxToPanelPercent(newHtmlH);
-          const cssPct = pxToPanelPercent(cssH);
-          const jsPct = pxToPanelPercent(jsH);
-          setEditorHeights(htmlPct, cssPct, jsPct);
-        });
-
-        document.addEventListener("mouseup", function () {
-          if (!dragging) return;
-          dragging = false;
-          dragEnd("dragging-h");
-          handle.classList.remove("dragging");
-          saveDimensions();
-        });
-      }
-
-      /* ── Resize: horizontal split 2 (css ↔ js) ────────────────────── */
-      {
-        const handle = document.getElementById("rh2");
-        let dragging = false,
-          startY = 0,
-          startH = 0,
-          startHtmlH = 0;
-
-        handle.addEventListener("mousedown", function (e) {
-          dragging = true;
-          startY = e.clientY;
-          startH = cssPanel.offsetHeight;
-          startHtmlH = htmlPanel.offsetHeight;
-          dragStart("dragging-h");
-          handle.classList.add("dragging");
-          e.preventDefault();
-        });
-
-        document.addEventListener("mousemove", function (e) {
-          if (!dragging) return;
-          const delta = e.clientY - startY;
-          const usableH = getEditorUsableHeight();
-          const startSplitH = startHtmlH + startH;
-          const minSplitH = MIN_EDITOR_PANEL_PX * 2;
-          const maxSplitH = usableH - MIN_EDITOR_PANEL_PX;
-          const splitH = Math.max(
-            minSplitH,
-            Math.min(startSplitH + delta, maxSplitH),
-          );
-
-          let htmlH = startHtmlH;
-          let cssH = splitH - htmlH;
-
-          // If CSS would collapse, keep CSS at minimum and push HTML up.
-          if (cssH < MIN_EDITOR_PANEL_PX) {
-            htmlH = Math.max(MIN_EDITOR_PANEL_PX, splitH - MIN_EDITOR_PANEL_PX);
-            cssH = splitH - htmlH;
-          }
-
-          const jsH = Math.max(MIN_EDITOR_PANEL_PX, usableH - splitH);
-          const htmlPct = pxToPanelPercent(htmlH);
-          const cssPct = pxToPanelPercent(cssH);
-          const jsPct = pxToPanelPercent(jsH);
-          setEditorHeights(htmlPct, cssPct, jsPct);
-        });
-
-        document.addEventListener("mouseup", function () {
-          if (!dragging) return;
-          dragging = false;
-          dragEnd("dragging-h");
-          handle.classList.remove("dragging");
-          saveDimensions();
-        });
-      }
-
-      /* ── Resize: console height ────────────────────────────────────── */
-      {
-        const handle = document.getElementById("console-resize");
-        let dragging = false,
-          startY = 0,
-          startH = 0;
-
-        handle.addEventListener("mousedown", function (e) {
-          dragging = true;
-          startY = e.clientY;
-          startH = consolePn.offsetHeight;
-          dragStart("dragging-h");
-          handle.classList.add("dragging");
-          e.preventDefault();
-        });
-
-        document.addEventListener("mousemove", function (e) {
-          if (!dragging) return;
-          const previewH = document.getElementById("preview-pane").offsetHeight;
-          const newH = Math.max(
-            60,
-            Math.min(startH - (e.clientY - startY), previewH - 80),
-          );
-          consolePn.style.height = newH + "px";
-        });
-
-        document.addEventListener("mouseup", function () {
-          if (!dragging) return;
-          dragging = false;
-          dragEnd("dragging-h");
-          handle.classList.remove("dragging");
-          saveDimensions();
-        });
-      }
+      makeSplitter(
+        consoleRes,
+        "dragging-h",
+        () => consolePn.offsetHeight,
+        (startH, dx, dy) => {
+          const maxH = previewPane.offsetHeight - 80;
+          consolePn.style.height =
+            Math.max(MIN_CONSOLE_HEIGHT_PX, Math.min(startH - dy, maxH)) + "px";
+        },
+      );
 
       /* ── Default content ───────────────────────────────────────────── */
       const DEFAULT_HTML = `<div class="card">
@@ -1439,7 +1774,6 @@ window.addEventListener('unhandledrejection',function(e){
   <p>Edit HTML, CSS, and JavaScript in the panels on the left. Changes run automatically.</p>
   <div class="actions">
     <button onclick="sayHello()">Say Hello</button>
-    <button class="outline" onclick="changeTheme()">Change Color</button>
   </div>
 </div>`;
 
@@ -1495,68 +1829,28 @@ button {
   transition: transform .1s, opacity .1s;
 }
 button:hover { opacity: .88; transform: translateY(-1px); }
-button:active { transform: translateY(0); }
-button.outline {
-  background: transparent;
-  border: 1px solid #2e3236;
-  color: #848a91;
-}
-button.outline:hover { border-color: #7e9cb5; color: #7e9cb5; }`;
+button:active { transform: translateY(0); }`;
 
-      const DEFAULT_JS = `const colors = ['#7e9cb5', '#98c379', '#61afef', '#c678dd', '#e06c75', '#e5c07b'];
-let ci = 0;
-
-function sayHello() {
+      const DEFAULT_JS = `function sayHello() {
   const greetings = ['Hello! 👋', 'Hey there! ✨', 'Hi! 🚀', 'Howdy! 🤠'];
   const msg = greetings[Math.floor(Math.random() * greetings.length)];
   console.log('Button clicked:', msg);
   alert(msg);
-}
-
-function changeTheme() {
-  ci = (ci + 1) % colors.length;
-  document.querySelector('button:not(.outline)').style.background = colors[ci];
-  console.log('Theme color changed to', colors[ci]);
-}
-
-console.log('Sandbox ready ✓');`;
+}`;
 
       /* ── Init ──────────────────────────────────────────────────────── */
       loadState();
-      const loaded = loadFromURL();
-      if (!loaded) {
-        // Load code from stored state only when there is no URL state
-        setEditorValue(
-          htmlEd,
-          appState.code.h != null ? appState.code.h : DEFAULT_HTML,
-        );
-        setEditorValue(
-          cssEd,
-          appState.code.c != null ? appState.code.c : DEFAULT_CSS,
-        );
-        setEditorValue(
-          jsEd,
-          appState.code.j != null ? appState.code.j : DEFAULT_JS,
-        );
-      }
 
       editorsPane.style.width = normalizeEditorWidth(
         appState.dimensions.editorsW,
       );
 
-      if (
-        appState.dimensions.htmlH &&
-        appState.dimensions.cssH &&
-        appState.dimensions.jsH
-      ) {
-        setEditorHeights(
-          parseFloat(appState.dimensions.htmlH),
-          parseFloat(appState.dimensions.cssH),
-          parseFloat(appState.dimensions.jsH),
-        );
-      } else {
-        setEditorHeights(33.3333, 33.3333, 33.3334);
-      }
+      const savedHeights = [
+        appState.dimensions.htmlH,
+        appState.dimensions.cssH,
+        appState.dimensions.jsH,
+      ].map(parseFloat);
+      if (savedHeights.every((h) => h > 0)) setPanelHeights(savedHeights);
 
       if (appState.dimensions.consoleH)
         consolePn.style.height = normalizeConsoleHeight(
@@ -1571,13 +1865,58 @@ console.log('Sandbox ready ✓');`;
         btnConsole.classList.add("active");
       }
 
-      // Attach change listeners after initial content is set (avoids spurious run)
-      bindEditorBehavior(htmlEd, "xml");
-      bindEditorBehavior(cssEd, "css");
-      bindEditorBehavior(jsEd, "javascript");
+      window.addEventListener("hashchange", async function () {
+        const shared = await readSharedCode();
+        if (!shared) return;
+        applyCode(shared);
+        // The old undo steps belong to the replaced code.
+        [htmlEd, cssEd, jsEd].forEach(initEditorHistory);
+        refreshEditors();
+        scheduleRun();
+      });
 
+      window.addEventListener("pagehide", flushSave);
+      document.addEventListener("visibilitychange", function () {
+        if (document.hidden) flushSave();
+      });
+
+      readSharedCode().then(function (shared) {
+        // Load code from stored state only when there is no URL state
+        applyCode(
+          shared || {
+            h: appState.code.h != null ? appState.code.h : DEFAULT_HTML,
+            c: appState.code.c != null ? appState.code.c : DEFAULT_CSS,
+            j: appState.code.j != null ? appState.code.j : DEFAULT_JS,
+          },
+        );
+
+        // Attach change listeners after initial content is set (avoids spurious run)
+        bindEditorBehavior(htmlEd, "xml");
+        bindEditorBehavior(cssEd, "css");
+        bindEditorBehavior(jsEd, "javascript");
+
+        refreshEditors();
+        // A run that never reported "done" probably hung: do not repeat it.
+        if (localStorage.getItem(RUN_FLAG_KEY)) {
+          autoRunPaused = true;
+          pausedEl.hidden = false;
+        } else {
+          run();
+        }
+      });
+    </script>
+    <!-- Loads after the app: the editors show plain text until it is ready. -->
+    <script type="module">
+      import hljs from "highlight.js/core.min.js";
+      import xml from "highlight.js/languages/xml.min.js";
+      import css from "highlight.js/languages/css.min.js";
+      import javascript from "highlight.js/languages/javascript.min.js";
+
+      hljs.registerLanguage("xml", xml);
+      hljs.registerLanguage("css", css);
+      hljs.registerLanguage("javascript", javascript);
+      window.hljs = hljs;
       refreshEditors();
-      run();
     </script>
   </body>
 </html>
