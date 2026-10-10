@@ -1151,8 +1151,6 @@
       }
 
       /* ── URL state ─────────────────────────────────────────────────── */
-      const SHARE_PREFIX = "code/";
-
       function bytesToBase64Url(bytes) {
         let binary = "";
         for (const byte of bytes) binary += String.fromCharCode(byte);
@@ -1185,21 +1183,14 @@
           new TextEncoder().encode(json),
           new CompressionStream("deflate-raw"),
         );
-        return SHARE_PREFIX + bytesToBase64Url(new Uint8Array(packed));
+        return bytesToBase64Url(new Uint8Array(packed));
       }
 
-      // Links made before compression hold plain base64 JSON with no prefix.
       async function decodeShare(hash) {
-        const packed = hash.startsWith(SHARE_PREFIX);
-        let bytes = base64ToBytes(
-          packed ? hash.slice(SHARE_PREFIX.length) : hash,
+        const bytes = await pipeBytes(
+          base64ToBytes(hash),
+          new DecompressionStream("deflate-raw"),
         );
-        if (packed) {
-          bytes = await pipeBytes(
-            bytes,
-            new DecompressionStream("deflate-raw"),
-          );
-        }
         return JSON.parse(new TextDecoder().decode(bytes));
       }
 
